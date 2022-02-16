@@ -10,10 +10,20 @@
     <string name="student_fio">ФИО</string>
     <string name="faculty">Факультет</string>
     <string name="group">Группа</string>
+    <string name="subject_form_title">Предмет</string>
     <string-array name="marks_array">
         <item>5</item>
         <item>4</item>
         <item>3</item>
         <item>2</item>
+    </string-array>
+    <string-array name="subjects_names">
+        <item>Android</item>
+        <item>Java</item>
+        <item>ООП</item>
+        <item>Мат. анализ</item>
+        <item>Линейная алгебра</item>
+        <item>Web-технологии</item>
+        <item>Статистика</item>
     </string-array>
 </resources>

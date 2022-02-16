@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                                     Toast.LENGTH_SHORT
                             ).show();
                             studentAdapter.notifyDataSetChanged();
+                            markSelected();
                         }
 
                     }
@@ -119,10 +120,7 @@ public class MainActivity extends AppCompatActivity {
         AdapterView.OnItemClickListener clStudent = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(MainActivity.this, StudentActivity.class);
-                intent.putExtra("Student", studentsList.get(i));
                 selectStudent(i, view);
-
             }
         };
         listView.setOnItemClickListener(clStudent);
@@ -141,6 +139,12 @@ public class MainActivity extends AppCompatActivity {
         selectView.setBackgroundResource(R.color.selected);
         mPosition = selectPosition;
         mPositionView = selectView;
+    }
+
+    public void markSelected() {
+        if (mPosition != -1 && mPositionView != null) {
+            mPositionView.setBackgroundResource(R.color.selected);
+        }
     }
 
     public void addStudent() {
@@ -162,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             studentsList.remove(mPosition);
             mPosition = -1;
             studentAdapter.notifyDataSetChanged();
+            markSelected();
         }
     }
 
