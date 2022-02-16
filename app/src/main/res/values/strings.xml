@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Studentera</string>
+    <string name="menu_add">Добавить</string>
+    <string name="menu_change">Изменить</string>
+    <string name="menu_delete">Удалить</string>
+    <string name="menu_exit">Выход</string>
+    <string name="student_lastname">Фамилия</string>
+    <string name="student_firstname">Имя</string>
+    <string name="student_middlename">Отчество</string>
+    <string name="student_fio">ФИО</string>
+    <string name="faculty">Факультет</string>
+    <string name="group">Группа</string>
+    <string-array name="marks_array">
+        <item>5</item>
+        <item>4</item>
+        <item>3</item>
+        <item>2</item>
+    </string-array>
+</resources>
