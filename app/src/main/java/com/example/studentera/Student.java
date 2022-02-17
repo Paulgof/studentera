@@ -25,6 +25,9 @@ public class Student implements Parcelable {
     }
 
     public Student() {
+        mFIO = "";
+        mFaculty = "";
+        mGroup = "";
         mSubjects = new ArrayList<>();
     }
 
@@ -72,6 +75,10 @@ public class Student implements Parcelable {
         this.mFIO = mFIO;
     }
 
+    public boolean isFioEmpty() {
+        return mFIO == null || mFIO.isEmpty();
+    }
+
     public String getFaculty() {
         return mFaculty;
     }
@@ -80,12 +87,20 @@ public class Student implements Parcelable {
         this.mFaculty = mFaculty;
     }
 
+    public boolean isFacultyEmpty() {
+        return mFaculty == null || mFaculty.isEmpty();
+    }
+
     public String getGroup() {
         return mGroup;
     }
 
     public void setGroup(String mGroup) {
         this.mGroup = mGroup;
+    }
+
+    public boolean isGroupEmpty() {
+        return mGroup == null || mGroup.isEmpty();
     }
 
     public ArrayList<Subject> getmSubjects() {

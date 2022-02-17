@@ -25,6 +25,7 @@ public class StudentActivity extends AppCompatActivity {
     ArrayList<Subject> studentSubjects;
     SubjectAdapter subjectAdapter;
 
+    private boolean areSubjectsChanged = false;
     private int mPosition = -1;
     private View mPositionView;
     private ArrayList<String> allSubjectsList;
@@ -35,8 +36,6 @@ public class StudentActivity extends AppCompatActivity {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
-
-    AlertDialog.Builder infoDialog;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -132,6 +131,7 @@ public class StudentActivity extends AppCompatActivity {
                 ));
                 subjectAdapter.notifyDataSetChanged();
                 mPosition = -1;
+                areSubjectsChanged = true;
             }
         }).setNegativeButton("Отмена", null);
         inputDialog.show();
@@ -163,7 +163,7 @@ public class StudentActivity extends AppCompatActivity {
                 selectedSubject.setmMark(mMark.getSelectedItem().toString());
                 subjectAdapter.notifyDataSetChanged();
                 mPosition = -1;
-
+                areSubjectsChanged = true;
             }
         }).setNegativeButton("Отмена", null);
         inputDialog.show();
@@ -174,39 +174,75 @@ public class StudentActivity extends AppCompatActivity {
             return;
 
         studentSubjects.remove(mPosition);
-        mPosition = -1;
         subjectAdapter.notifyDataSetChanged();
+        mPosition = -1;
+        areSubjectsChanged = true;
     }
 
-    public void clSave(View view) {
+    public boolean isStudentInfoChanged() {
+        String fio = ((EditText) findViewById(R.id.student_fio)).getText().toString();
+        String faculty = ((EditText) findViewById(R.id.student_faculty)).getText().toString();
+        String group = ((EditText) findViewById(R.id.student_group)).getText().toString();
+        return !(mStudent.getFIO().equals(fio)
+                && mStudent.getFaculty().equals(faculty)
+                && mStudent.getGroup().equals(group));
+    }
+
+    public boolean checkFieldsFullFit() {
+        boolean checkStatus = true;
+
+        if (mStudent.isFioEmpty()) {
+            checkStatus = false;
+            ((EditText) findViewById(R.id.student_fio)).setError("ФИО не может быть пустым");
+        }
+        if (mStudent.isFacultyEmpty()) {
+            checkStatus = false;
+            ((EditText) findViewById(R.id.student_faculty)).setError("Нужно указать факультет");
+        }
+        if (mStudent.isGroupEmpty()) {
+            checkStatus = false;
+            ((EditText) findViewById(R.id.student_group)).setError("Нужно указать группу");
+        }
+
+        return checkStatus;
+    }
+
+    public void clSave() {
 
         mStudent.setFIO(((EditText) findViewById(R.id.student_fio)).getText().toString());
         mStudent.setFaculty(((EditText) findViewById(R.id.student_faculty)).getText().toString());
         mStudent.setGroup(((EditText) findViewById(R.id.student_group)).getText().toString());
-        Intent intent = new Intent();
-        intent.putExtra("Student", mStudent);
-        setResult(RESULT_OK, intent);
-        finish();
+        if (checkFieldsFullFit()) {
+            Intent intent = new Intent();
+            intent.putExtra("Student", mStudent);
+            setResult(RESULT_OK, intent);
+            finish();
+        }
     }
 
-    public void clCancel(View view) {
+    public void clCancel() {
         finish();
     }
 
     private void openQuitDialog() {
+        if (!areSubjectsChanged && !isStudentInfoChanged()) {
+            clCancel();
+            return;
+        }
+
         AlertDialog.Builder quitDialog = new AlertDialog.Builder(this);
         quitDialog.setTitle("Сохранить изменения?");
         quitDialog.setPositiveButton("Да", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                clSave(null);
+                clSave();
             }
         });
 
         quitDialog.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                clCancel(null);
+                clCancel();
             }
         });
 
