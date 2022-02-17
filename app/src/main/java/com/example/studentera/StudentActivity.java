@@ -3,7 +3,13 @@ package com.example.studentera;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +36,15 @@ public class StudentActivity extends AppCompatActivity {
     private View mPositionView;
     private ArrayList<String> allSubjectsList;
     private ArrayList<String> allMarksList;
+
+    private DBHelper dbHelper;
+    private SQLiteDatabase db;
+
+    private boolean LOAD_SUBJECTS_MODE = false;
+    final int NO_CHANGES = 1100;
+    final int HAS_CHANGES = 1101;
+    final int MARKS_LOADED = 1200;
+    Handler loadHandler;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -64,6 +79,19 @@ public class StudentActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
+        dbHelper = new DBHelper(this);
+        db = dbHelper.getWritableDatabase();
+
+        loadHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == MARKS_LOADED) {
+                    subjectAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+
+
         allSubjectsList = new ArrayList<>(
                 Arrays.asList(getResources().getStringArray(R.array.subjects_names))
         );
@@ -79,6 +107,8 @@ public class StudentActivity extends AppCompatActivity {
             ((EditText) findViewById(R.id.student_fio)).setText(mStudent.getFIO());
             ((EditText) findViewById(R.id.student_faculty)).setText(mStudent.getFaculty());
             ((EditText) findViewById(R.id.student_group)).setText(mStudent.getGroup());
+            LOAD_SUBJECTS_MODE = true;
+            Log.i("LA", "Intent student id: " + mStudent.getId());
         } else {
             mStudent = new Student();
         }
@@ -88,7 +118,6 @@ public class StudentActivity extends AppCompatActivity {
         ListView subjectsList = findViewById(R.id.subjectList);
         subjectsList.setAdapter(subjectAdapter);
 
-
         AdapterView.OnItemClickListener clSubject = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -96,6 +125,25 @@ public class StudentActivity extends AppCompatActivity {
             }
         };
         subjectsList.setOnItemClickListener(clSubject);
+
+//        if (LOAD_SUBJECTS_MODE && mStudent.isSubjectsEmpty()) {
+//            Log.i("LA", "YES");
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    int status = loadMarks();
+//                    if (status == HAS_CHANGES) {
+//                        loadHandler.sendEmptyMessage(MARKS_LOADED);
+//                    }
+//                }
+//            }).start();
+//        }
+
+        int status = loadMarks();
+        Log.i("LA", "Load status: " + status);
+        if (status == HAS_CHANGES) {
+            subjectAdapter.notifyDataSetChanged();
+        }
 
     }
 
@@ -177,6 +225,37 @@ public class StudentActivity extends AppCompatActivity {
         subjectAdapter.notifyDataSetChanged();
         mPosition = -1;
         areSubjectsChanged = true;
+    }
+
+    public int loadMarks() {
+        int status = NO_CHANGES;
+
+//        studentSubjects = new ArrayList<>();
+//        mStudent.setmSubjects(studentSubjects);
+
+        Cursor curMarks = db.query(
+                DBHelper.TABLE_MARK,
+                null,
+                DBHelper.MARK_STUDENT + " = ?",
+                new String[] {Integer.toString(mStudent.getId())},
+                null,
+                null,
+                null
+        );
+        if (curMarks.moveToFirst()) {
+            int markSubjectIndex = curMarks.getColumnIndex(DBHelper.MARK_SUBJECT);
+            int markValueIndex = curMarks.getColumnIndex(DBHelper.MARK_VALUE);
+            do {
+                studentSubjects.add(new Subject(
+                        curMarks.getString(markSubjectIndex),
+                        curMarks.getString(markValueIndex)
+                ));
+                status = HAS_CHANGES;
+            } while (curMarks.moveToNext());
+        }
+        curMarks.close();
+
+        return status;
     }
 
     public boolean isStudentInfoChanged() {

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class Student implements Parcelable {
     private String mFIO, mFaculty, mGroup;
+    private int id;
     private ArrayList<Subject> mSubjects;
 
     public Student(String FIO, String faculty, String group) {
@@ -17,7 +18,16 @@ public class Student implements Parcelable {
 
     }
 
+    public Student(int id, String FIO, String faculty, String group) {
+        this.id = id;
+        mFIO = FIO;
+        mFaculty = faculty;
+        mGroup = group;
+        mSubjects = new ArrayList<>();
+    }
+
     public Student(Parcel in) {
+        id = in.readInt();
         mFIO = in.readString();
         mFaculty = in.readString();
         mGroup = in.readString();
@@ -33,6 +43,7 @@ public class Student implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(this.id);
         parcel.writeString(this.mFIO);
         parcel.writeString(this.mFaculty);
         parcel.writeString(this.mGroup);
@@ -105,5 +116,19 @@ public class Student implements Parcelable {
 
     public ArrayList<Subject> getmSubjects() {
         return mSubjects;
+    }
+
+    public void setmSubjects(ArrayList<Subject> mSubjects) {
+        this.mSubjects = mSubjects;
+    }
+
+    public boolean isSubjectsEmpty() { return mSubjects.isEmpty();}
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

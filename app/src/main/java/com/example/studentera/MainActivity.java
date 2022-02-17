@@ -8,18 +8,19 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.DialogInterface;
+import android.content.ContentValues;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
-import android.text.TextUtils;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -33,13 +34,17 @@ public class MainActivity extends AppCompatActivity {
     private View mPositionView;
     private ActivityResultLauncher<Intent> mActivityResultLauncher;
 
+    private DBHelper dbHelper;
+    private SQLiteDatabase db;
+
+    final int DATA_LOADED = 1010;
+    Handler dataLoadHandler;
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
     }
-
-    AlertDialog.Builder infoDialog;
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -70,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        dbHelper = new DBHelper(this);
+        db = dbHelper.getWritableDatabase();
+
         mActivityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 new ActivityResultCallback<ActivityResult>() {
@@ -96,23 +104,28 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         );
-        studentListCreate(null);
+
+        dataLoadHandler = new Handler(Looper.getMainLooper()) {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == DATA_LOADED) {
+                    studentListCreate();
+                }
+            }
+        };
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                loadData();
+                dataLoadHandler.sendEmptyMessage(DATA_LOADED);
+            }
+        }).start();
 
     }
 
-    public void studentListCreate(View view) {
+    public void studentListCreate() {
         ListView listView = findViewById(R.id.studentList);
-
-
-        if (studentsList == null) {
-            studentsList = new ArrayList<>();
-            studentsList.add(new Student("Федоров Федор Федорович", "ФКТиПМ", "15/1"));
-            studentsList.add(new Student("Петров Петр Петрович", "ФКТиПМ", "16/1"));
-            studentsList.add(new Student("Иванов Иван Иванович", "ФМиФ", "15/1"));
-            studentsList.add(new Student("А Б В", "ФМиФ", "16/1"));
-            studentsList.add(new Student("Амбисарабил Дон Корнеолле Фон Рейман", "ФМиФ", "26/2"));
-        }
-
         studentAdapter = new StudentAdapter(this, studentsList);
 
         listView.setAdapter(studentAdapter);
@@ -170,20 +183,57 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void loadData() {
+        if (studentsList == null)
+            studentsList = new ArrayList<>();
+
+        Cursor curStudents = db.query(DBHelper.TABLE_STUDENT, null, null,
+                null, null, null, null);
+        if (curStudents.moveToFirst()) {
+            int studentIdIndex = curStudents.getColumnIndex(DBHelper.STUDENT_ID);
+            int studentFIOIndex = curStudents.getColumnIndex(DBHelper.STUDENT_FIO);
+            int studentFacultyIndex = curStudents.getColumnIndex(DBHelper.STUDENT_FACULTY);
+            int studentGroupIndex = curStudents.getColumnIndex(DBHelper.STUDENT_GROUP);
+            do {
+                studentsList.add(new Student(
+                        curStudents.getInt(studentIdIndex),
+                        curStudents.getString(studentFIOIndex),
+                        curStudents.getString(studentFacultyIndex),
+                        curStudents.getString(studentGroupIndex)
+                ));
+            } while (curStudents.moveToNext());
+        }
+        curStudents.close();
+    }
+
+    public void flushData() {
+        if (studentsList != null) {
+            ContentValues studentValues = new ContentValues();
+            for (Student student: studentsList) {
+                studentValues.put(DBHelper.STUDENT_FIO, student.getFIO());
+                studentValues.put(DBHelper.STUDENT_FACULTY, student.getFaculty());
+                studentValues.put(DBHelper.STUDENT_GROUP, student.getGroup());
+                long studentId = db.replace(DBHelper.TABLE_STUDENT, null, studentValues);
+                if (studentId != -1 && !student.isSubjectsEmpty()) {
+                    ContentValues subjectValues = new ContentValues();
+                    for (Subject subject: student.getmSubjects()) {
+                        subjectValues.put(DBHelper.MARK_SUBJECT, subject.getmName());
+                        subjectValues.put(DBHelper.MARK_VALUE, subject.getmMark());
+                        subjectValues.put(DBHelper.MARK_STUDENT, studentId);
+                        db.replace(DBHelper.TABLE_MARK, null, subjectValues);
+                        Log.i("MA", "save subject");
+                        subjectValues.clear();
+                    }
+                }
+
+                studentValues.clear();
+            }
+        }
+    }
 
     @Override
     protected void onDestroy() {
-        if (studentsList != null) {
-            SharedPreferences.Editor ed = getPreferences(MODE_PRIVATE).edit();
-//            GsonBuilder builder = new GsonBuilder();
-//            Gson gson = builder.create();
-//            ed.putInt("count", studentsList.size());
-//            for (int i = 0; i < studentsList.size(); ++i) {
-//                String s = gson.toJson(studentsList.get(i));
-//                ed.putString("student" + i, s);
-//            }
-//            ed.commit();
-        }
+        flushData();
         super.onDestroy();
     }
 }
