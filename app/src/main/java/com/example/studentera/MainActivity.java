@@ -213,7 +213,20 @@ public class MainActivity extends AppCompatActivity {
                 studentValues.put(DBHelper.STUDENT_FIO, student.getFIO());
                 studentValues.put(DBHelper.STUDENT_FACULTY, student.getFaculty());
                 studentValues.put(DBHelper.STUDENT_GROUP, student.getGroup());
-                long studentId = db.replace(DBHelper.TABLE_STUDENT, null, studentValues);
+                long studentId = -1;
+                if (student.getId() != -1) {
+                    int affected = db.update(
+                        DBHelper.TABLE_STUDENT,
+                        studentValues,
+                        DBHelper.STUDENT_ID + " = ?",
+                        new String[] {Integer.toString(student.getId())});
+
+                    if (affected > 0) studentId = student.getId();
+                }
+                if (studentId == -1) {
+                    studentId = db.insert(DBHelper.TABLE_STUDENT, null, studentValues);
+                }
+
                 if (studentId != -1 && !student.isSubjectsEmpty()) {
                     ContentValues subjectValues = new ContentValues();
                     for (Subject subject: student.getmSubjects()) {
@@ -221,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
                         subjectValues.put(DBHelper.MARK_VALUE, subject.getmMark());
                         subjectValues.put(DBHelper.MARK_STUDENT, studentId);
                         db.replace(DBHelper.TABLE_MARK, null, subjectValues);
-                        Log.i("MA", "save subject");
                         subjectValues.clear();
                     }
                 }

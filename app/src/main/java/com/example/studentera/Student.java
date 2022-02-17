@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class Student implements Parcelable {
     private String mFIO, mFaculty, mGroup;
-    private int id;
+    private int id = -1;
     private ArrayList<Subject> mSubjects;
 
     public Student(String FIO, String faculty, String group) {
