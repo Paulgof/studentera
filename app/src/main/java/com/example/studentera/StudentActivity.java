@@ -123,7 +123,7 @@ public class StudentActivity extends AppCompatActivity {
         AdapterView.OnItemClickListener clSubject = (adapterView, view, i, l) -> selectSubject(i, view);
         subjectsList.setOnItemClickListener(clSubject);
 
-        if (LOAD_SUBJECTS_MODE && mStudent.isSubjectsEmpty()) {
+        if (LOAD_SUBJECTS_MODE && studentSubjects.size() == 0) {
             Log.i("LA", "Thread mode");
             new Thread(() -> {
                 int status = loadMarks();
@@ -203,10 +203,16 @@ public class StudentActivity extends AppCompatActivity {
         if (mPosition == -1 || mPositionView == null)
             return;
 
-        studentSubjects.remove(mPosition);
+        Subject removedSubject = studentSubjects.remove(mPosition);
         subjectAdapter.notifyDataSetChanged();
         mPosition = -1;
         areSubjectsChanged = true;
+        if (removedSubject != null && mStudent.getId() != -1)
+        new Thread(() -> db.delete(
+                DBHelper.TABLE_MARK,
+                DBHelper.MARK_STUDENT + " = ? and " + DBHelper.MARK_SUBJECT + " = ?",
+                new String[] {Integer.toString(mStudent.getId()), removedSubject.getmName()}))
+                .start();
     }
 
     public int loadMarks() {

@@ -161,10 +161,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void deleteStudent() {
         if (mPosition != -1 && mPositionView != null) {
-            studentsList.remove(mPosition);
+            Student removedStudent = studentsList.remove(mPosition);
             mPosition = -1;
             studentAdapter.notifyDataSetChanged();
             markSelected();
+            if (removedStudent != null && removedStudent.getId() != -1)
+                new Thread(() -> db.delete(
+                        DBHelper.TABLE_STUDENT,
+                        DBHelper.STUDENT_ID + " = ?",
+                        new String[] {Integer.toString(removedStudent.getId())}))
+                        .start();
         }
     }
 
