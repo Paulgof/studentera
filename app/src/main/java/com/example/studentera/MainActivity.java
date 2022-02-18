@@ -7,6 +7,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -16,13 +17,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -46,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -80,28 +80,21 @@ public class MainActivity extends AppCompatActivity {
 
         mActivityResultLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
-                new ActivityResultCallback<ActivityResult>() {
-                    @Override
-                    public void onActivityResult(ActivityResult result) {
-                        if (result.getResultCode() == Activity.RESULT_OK) {
-                            Intent intent = result.getData();
-                            Student s = intent.getParcelableExtra("Student");
-                            if (mPosition < studentsList.size()) {
-                                studentsList.set(mPosition, s);
-                                mPosition = -1;
-                            } else
-                                studentsList.add(s);
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent intent = result.getData();
+                        assert intent != null;
+                        Student s = intent.getParcelableExtra("Student");
+                        if (mPosition < studentsList.size()) {
+                            studentsList.set(mPosition, s);
+                            mPosition = -1;
+                        } else
+                            studentsList.add(s);
 
-                            Toast.makeText(
-                                    getApplicationContext(),
-                                    "Student " + s.toString() + " successfully saved",
-                                    Toast.LENGTH_SHORT
-                            ).show();
-                            studentAdapter.notifyDataSetChanged();
-                            markSelected();
-                        }
-
+                        studentAdapter.notifyDataSetChanged();
+                        markSelected();
                     }
+
                 }
         );
 
@@ -114,12 +107,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                loadData();
-                dataLoadHandler.sendEmptyMessage(DATA_LOADED);
-            }
+        new Thread(() -> {
+            loadData();
+            dataLoadHandler.sendEmptyMessage(DATA_LOADED);
         }).start();
 
     }
@@ -130,12 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
         listView.setAdapter(studentAdapter);
 
-        AdapterView.OnItemClickListener clStudent = new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                selectStudent(i, view);
-            }
-        };
+        AdapterView.OnItemClickListener clStudent = (adapterView, view, i, l) -> selectStudent(i, view);
         listView.setOnItemClickListener(clStudent);
 
     }

@@ -1,5 +1,6 @@
 package com.example.studentera;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -52,6 +53,7 @@ public class StudentActivity extends AppCompatActivity {
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -86,7 +88,7 @@ public class StudentActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == MARKS_LOADED) {
-                    subjectAdapter.notifyDataSetChanged();
+                    subjectAdapter.refresh(studentSubjects);
                 }
             }
         };
@@ -118,31 +120,17 @@ public class StudentActivity extends AppCompatActivity {
         ListView subjectsList = findViewById(R.id.subjectList);
         subjectsList.setAdapter(subjectAdapter);
 
-        AdapterView.OnItemClickListener clSubject = new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                selectSubject(i, view);
-            }
-        };
+        AdapterView.OnItemClickListener clSubject = (adapterView, view, i, l) -> selectSubject(i, view);
         subjectsList.setOnItemClickListener(clSubject);
 
-//        if (LOAD_SUBJECTS_MODE && mStudent.isSubjectsEmpty()) {
-//            Log.i("LA", "YES");
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    int status = loadMarks();
-//                    if (status == HAS_CHANGES) {
-//                        loadHandler.sendEmptyMessage(MARKS_LOADED);
-//                    }
-//                }
-//            }).start();
-//        }
-
-        int status = loadMarks();
-        Log.i("LA", "Load status: " + status);
-        if (status == HAS_CHANGES) {
-            subjectAdapter.notifyDataSetChanged();
+        if (LOAD_SUBJECTS_MODE && mStudent.isSubjectsEmpty()) {
+            Log.i("LA", "Thread mode");
+            new Thread(() -> {
+                int status = loadMarks();
+                if (status == HAS_CHANGES) {
+                    loadHandler.sendEmptyMessage(MARKS_LOADED);
+                }
+            }).start();
         }
 
     }
@@ -170,17 +158,14 @@ public class StudentActivity extends AppCompatActivity {
         final Spinner mName = vv.findViewById(R.id.subjects_dropdown);
         final Spinner mMark = vv.findViewById(R.id.marks_dropdown);
 
-        inputDialog.setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                mStudent.getmSubjects().add(new Subject(
-                        mName.getSelectedItem().toString(),
-                        mMark.getSelectedItem().toString()
-                ));
-                subjectAdapter.notifyDataSetChanged();
-                mPosition = -1;
-                areSubjectsChanged = true;
-            }
+        inputDialog.setPositiveButton("Сохранить", (dialogInterface, i) -> {
+            mStudent.getmSubjects().add(new Subject(
+                    mName.getSelectedItem().toString(),
+                    mMark.getSelectedItem().toString()
+            ));
+            subjectAdapter.notifyDataSetChanged();
+            mPosition = -1;
+            areSubjectsChanged = true;
         }).setNegativeButton("Отмена", null);
         inputDialog.show();
     }
@@ -205,14 +190,11 @@ public class StudentActivity extends AppCompatActivity {
         mMark.setSelection(allMarksList.indexOf(selectedSubject.getmMark()));
 
 
-        inputDialog.setPositiveButton("Сохранить", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                selectedSubject.setmMark(mMark.getSelectedItem().toString());
-                subjectAdapter.notifyDataSetChanged();
-                mPosition = -1;
-                areSubjectsChanged = true;
-            }
+        inputDialog.setPositiveButton("Сохранить", (dialogInterface, i) -> {
+            selectedSubject.setmMark(mMark.getSelectedItem().toString());
+            subjectAdapter.notifyDataSetChanged();
+            mPosition = -1;
+            areSubjectsChanged = true;
         }).setNegativeButton("Отмена", null);
         inputDialog.show();
     }
@@ -229,9 +211,6 @@ public class StudentActivity extends AppCompatActivity {
 
     public int loadMarks() {
         int status = NO_CHANGES;
-
-//        studentSubjects = new ArrayList<>();
-//        mStudent.setmSubjects(studentSubjects);
 
         Cursor curMarks = db.query(
                 DBHelper.TABLE_MARK,
@@ -311,24 +290,9 @@ public class StudentActivity extends AppCompatActivity {
 
         AlertDialog.Builder quitDialog = new AlertDialog.Builder(this);
         quitDialog.setTitle("Сохранить изменения?");
-        quitDialog.setPositiveButton("Да", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                clSave();
-            }
-        });
-
-        quitDialog.setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                clCancel();
-            }
-        });
-
-        quitDialog.setNeutralButton("Отмена", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {}
-        });
+        quitDialog.setPositiveButton("Да", (dialogInterface, i) -> clSave());
+        quitDialog.setNegativeButton("Нет", (dialogInterface, i) -> clCancel());
+        quitDialog.setNeutralButton("Отмена", (dialogInterface, i) -> {});
 
         quitDialog.show();
     }

@@ -1,5 +1,6 @@
 package com.example.studentera;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,7 +13,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class SubjectAdapter extends BaseAdapter {
-    ArrayList<Subject> subjects = new ArrayList<>();
+    ArrayList<Subject> subjects;
     Context ctx;
     LayoutInflater lInflater;
 
@@ -20,6 +21,11 @@ public class SubjectAdapter extends BaseAdapter {
         ctx = context;
         this.subjects = subjects;
         lInflater = (LayoutInflater) ctx.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    }
+
+    public void refresh(ArrayList<Subject> newSubjects) {
+        subjects = newSubjects;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -39,6 +45,7 @@ public class SubjectAdapter extends BaseAdapter {
 
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
+        @SuppressLint("ViewHolder")
         View new_view = lInflater.inflate(R.layout.subject_element, viewGroup, false);
         if (subjects.isEmpty()) return new_view;
 
