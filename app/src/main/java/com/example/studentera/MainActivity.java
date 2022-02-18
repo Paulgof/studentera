@@ -1,7 +1,5 @@
 package com.example.studentera;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -17,6 +15,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +23,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
 
     final int DATA_LOADED = 1010;
     Handler dataLoadHandler;
+
+    View.OnLongClickListener fioLongClickListener, facultyLongClickListener, groupLongClickListener;
+    Comparator<Student> compByFIO, compByFaculty, compByGroup;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -98,6 +102,29 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
+        compByFIO = (o1, o2) -> o1.getFIO().compareTo(o2.getFIO());
+        compByFaculty = (o1, o2) -> o1.getFaculty().compareTo(o2.getFaculty());
+        compByGroup = (o1, o2) -> o1.getGroup().compareTo(o2.getGroup());
+
+        fioLongClickListener = v -> {
+            Log.i("MA", "FIO long click");
+            Collections.sort(studentsList, compByFIO);
+            studentAdapter.notifyDataSetChanged();
+            return true;
+        };
+        facultyLongClickListener = v -> {
+            Log.i("MA", "Faculty long click");
+            Collections.sort(studentsList, compByFaculty);
+            studentAdapter.notifyDataSetChanged();
+            return true;
+        };
+        groupLongClickListener = v -> {
+            Log.i("MA", "Group long click");
+            Collections.sort(studentsList, compByGroup);
+            studentAdapter.notifyDataSetChanged();
+            return true;
+        };
+
         dataLoadHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -117,10 +144,16 @@ public class MainActivity extends AppCompatActivity {
     public void studentListCreate() {
         ListView listView = findViewById(R.id.studentList);
         studentAdapter = new StudentAdapter(this, studentsList);
+        studentAdapter.setFioLongClickListener(fioLongClickListener);
+        studentAdapter.setFacultyLongClickListener(facultyLongClickListener);
+        studentAdapter.setGroupLongClickListener(groupLongClickListener);
 
         listView.setAdapter(studentAdapter);
 
-        AdapterView.OnItemClickListener clStudent = (adapterView, view, i, l) -> selectStudent(i, view);
+        AdapterView.OnItemClickListener clStudent = (adapterView, view, i, l) -> {
+            Log.i("MA", "Item short click: " + i + ", " + l + ", " + view.getId());
+            selectStudent(i, view);
+        };
         listView.setOnItemClickListener(clStudent);
 
     }

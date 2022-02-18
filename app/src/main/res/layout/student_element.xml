@@ -3,43 +3,51 @@
     android:id="@+id/ll_element"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
 
     <TextView
         android:id="@+id/twFIO"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_margin="5dp"
-        android:layout_weight="5"
+        android:layout_weight="0.65"
         android:gravity="center_vertical"
         android:keepScreenOn="false"
         android:text="@string/student_fio"
         android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:scrollHorizontally="true"
+        android:marqueeRepeatLimit="marquee_forever"/>
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:layout_weight="5"
-        android:orientation="vertical">
+        android:layout_weight="0.35"
+        android:clickable="false"
+        android:focusable="false">
 
         <TextView
             android:id="@+id/twFaculty"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:layout_weight="0.6"
             android:padding="1dp"
             android:text="@string/faculty"
             android:textSize="16sp" />
 
         <TextView
             android:id="@+id/twGroup"
-            android:layout_width="wrap_content"
+
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
-            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:layout_weight="0.4"
             android:padding="1dp"
             android:text="@string/group"
             android:textSize="16sp" />

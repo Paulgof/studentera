@@ -123,8 +123,8 @@ public class StudentActivity extends AppCompatActivity {
         AdapterView.OnItemClickListener clSubject = (adapterView, view, i, l) -> selectSubject(i, view);
         subjectsList.setOnItemClickListener(clSubject);
 
-        if (LOAD_SUBJECTS_MODE && studentSubjects.size() == 0) {
-            Log.i("LA", "Thread mode");
+        if (LOAD_SUBJECTS_MODE && mStudent.isSubjectsEmpty()) {
+            Log.i("LA", "Load subjects mode");
             new Thread(() -> {
                 int status = loadMarks();
                 if (status == HAS_CHANGES) {
